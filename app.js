@@ -6,19 +6,30 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const connectDB = require('./connection');
 var cors = require('cors')
+const http = require('http');
+const { Server } = require('socket.io');
+const bodyParser = require('body-parser');
 const {
     connectRoute
 } = require("./Router/index");
-const bcrypt = require('bcrypt');
-const Admin = require('./Model/Admin'); 
+// const bcrypt = require('bcrypt');
+// const Admin = require('./Model/Admin'); 
+
 
 connectDB();
 var app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: '*', // Allow all origins
+        methods: ['GET', 'POST'],
+    },
+});
 
 app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
-
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -58,6 +69,21 @@ app.use(function(err, req, res, next) {
   // render the error page if found
   res.status(err.status || 500);
   res.render('error');
+});
+
+// Socket.IO connection
+io.on('connection', (socket) => {
+  console.log('A client connected:', socket.id);
+
+  socket.on('disconnect', () => {
+      console.log('A client disconnected:', socket.id);
+  });
+});
+
+// Attach Socket.IO to request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
 });
 
 const PORT = process.env.PORT || 5000;
