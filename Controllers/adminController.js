@@ -30,8 +30,8 @@ exports.login = async (req, res) => {
 };
 
 exports.handleAdminAction = async (req, res) => {
-    const { questionId, answerToRevealId, reveal, orderNumber, strike, countStrike } = req.body;
-
+    const { questionId, answerToRevealId, reveal, strike, countStrike } = req.body;
+    
     try {
         if (reveal) {
             // Find the question and the specific answer
@@ -54,11 +54,7 @@ exports.handleAdminAction = async (req, res) => {
             // Emit the event with answer details
             req.io.emit('revealAnswer', {
                 questionId,
-                answer: {
-                    text: answer.text,
-                    points: answer.points,
-                },
-                orderNumber,
+                answer: answer
             });
 
             return res.status(200).json({
