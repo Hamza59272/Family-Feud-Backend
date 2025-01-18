@@ -8,8 +8,9 @@ const SurveySchema = new mongoose.Schema({
             points: { type: Number, required: true },
         },
     ],
+    playedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Family' }], // Tracks families that played this question
 });
 
-const Servey = mongoose.model('Survey', SurveySchema);
+const Survey = mongoose.model('Survey', SurveySchema);
 
-module.exports = Servey
+module.exports = Survey;

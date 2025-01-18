@@ -1,6 +1,7 @@
 const adminRouter = require("./admin.routes.js");
 const surveyRouter = require("./survey.routes.js")
 const familyRouter = require("./family.routes.js")
+const gameRouter = require("./game.routes.js")
 
 const routes = [
     {
@@ -14,6 +15,10 @@ const routes = [
     {
         path: "/api/family",
         handler: familyRouter,
+    },
+    {
+        path: "/api/Game",
+        handler: gameRouter,
     },
 ];
 
