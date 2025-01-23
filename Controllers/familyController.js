@@ -62,3 +62,74 @@ exports.getFamilies = async (req, res) => {
         });
     }
 }
+
+
+exports.updateFamily = async (req, res) => {
+    try {
+        const { familyId, newName } = req.body;
+
+        // Check if the family exists
+        const family = await Family.findById(familyId);
+        if (!family) {
+            return res.status(404).send({
+                success: false,
+                error: "Family not found"
+            });
+        }
+
+        // Check if the new name is already taken
+        const existingFamily = await Family.findOne({
+            $expr: { $eq: [{ $toLower: "$name" }, newName.toLowerCase()] }
+        });
+
+        if (existingFamily) {
+            return res.status(400).send({
+                success: false,
+                error: "Family name already exists"
+            });
+        }
+
+        // Update the family name
+        family.name = newName;
+        await family.save();
+
+        res.status(200).send({
+            success: true,
+            family: family,
+            message: "Family updated successfully"
+        });
+    } catch (err) {
+        res.status(500).send({
+            success: false,
+            error: err.message
+        });
+    }
+};
+
+exports.deleteFamily = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Check if the family exists
+        const family = await Family.findById(id);
+        if (!family) {
+            return res.status(404).send({
+                success: false,
+                error: "Family not found"
+            });
+        }
+
+        // Delete the family
+        await Family.findByIdAndDelete(id);
+
+        res.status(200).send({
+            success: true,
+            message: "Family deleted successfully"
+        });
+    } catch (err) {
+        res.status(500).send({
+            success: false,
+            error: err.message
+        });
+    }
+};

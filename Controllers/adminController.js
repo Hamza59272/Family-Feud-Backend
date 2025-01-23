@@ -19,10 +19,10 @@ exports.login = async (req, res) => {
         });
 
         const token = jwt.sign({ _id: admin._id }, process.env.JWT_SECRET);
-        res.status(200).send({ 
+        res.status(200).send({
             success: true,
-            message : 'Login Successfully',
-            token:  token 
+            message: 'Login Successfully',
+            token: token
         });
     } catch (err) {
         res.status(500).send({ error: err.message });
@@ -30,51 +30,119 @@ exports.login = async (req, res) => {
 };
 
 exports.handleAdminAction = async (req, res) => {
-    const { questionId, answerToRevealId, reveal, strike, countStrike } = req.body;
-    
+    const { familyTurn, questionId, answerToRevealId, reveal, strike, countStrike } = req.body;
+
     try {
-        if (reveal) {
-            // Find the question and the specific answer
-            const question = await Survey.findById(questionId);
-            if (!question) {
-                return res.status(404).json({
+        if(familyTurn){
+            if (reveal) {
+                // Find the question and the specific answer
+                const question = await Survey.findById(questionId);
+                if (!question) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Question not found.',
+                    });
+                }
+    
+                const answer = question.answers.id(answerToRevealId);
+                if (!answer) {
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Answer not found.',
+                    });
+                }
+    
+                req.io.emit('revealAnswer', {
+                    questionId,
+                    answer: answer,
+                    familyTurn: familyTurn
+                });
+    
+                return res.status(200).json({
+                    success: true,
+                    message: 'Answer revealed successfully.',
+                });
+            } else if (strike) {
+                req.io.emit('strike', {
+                    countStrike: countStrike,
+                    familyTurn: familyTurn
+                });
+    
+                return res.status(200).json({
+                    success: true,
+                    message: 'Strike broadcasted successfully.',
+                });
+            } else {
+                return res.status(400).json({
                     success: false,
-                    message: 'Question not found.',
+                    message: 'Invalid action.',
                 });
             }
-
-            const answer = question.answers.id(answerToRevealId);
-            if (!answer) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Answer not found.',
-                });
-            }
-
-            // Emit the event with answer details
-            req.io.emit('revealAnswer', {
-                questionId,
-                answer: answer
-            });
-
-            return res.status(200).json({
-                success: true,
-                message: 'Answer revealed successfully.',
-            });
-        } else if (strike) {
-            // Emit strike event
-            req.io.emit('strike', { countStrike });
-
-            return res.status(200).json({
-                success: true,
-                message: 'Strike broadcasted successfully.',
-            });
-        } else {
+        }
+        else {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid action.',
+                message: 'Family Turn Required',
             });
         }
+       
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing the action.',
+        });
+    }
+};
+
+exports.switchFamily = async (req, res) => {
+    const { familyTurn } = req.body;
+
+    try {
+
+        req.io.emit('switchFamily', {
+            familyTurn: familyTurn
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Family Switched Successfully.',
+        })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing the action.',
+        });
+    }
+};
+
+exports.revealAll = async (req, res) => {
+    const { questionId } = req.body;
+
+    try {
+
+        const question = await Survey.findById(questionId);
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question not found.',
+            });
+        }
+
+        question.answers;
+
+
+        req.io.emit('revealAll', {
+            questionId,
+            answer: question.answers
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Answers revealed successfully.',
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({
