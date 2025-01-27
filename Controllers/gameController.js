@@ -196,15 +196,13 @@ exports.endGame = async (req, res) => {
         req.io.emit('endGame', {
             familyWon: {
                 id: familyWon._id,
-                gamesPlayed: familyWon.gamesPlayed,
-                gamesWon: familyWon.gamesWon,
-                score: familyWon.score,
+                Name: familyWon.name,
+                score: familyWonScore,
             },
             familyLose: {
                 id: familyLose._id,
-                gamesPlayed: familyLose.gamesPlayed,
-                gamesWon: familyLose.gamesWon,
-                score: familyLose.score,
+                Name: familyLose.name,
+                score: familyLoseScore,
             }
         });
 
