@@ -232,3 +232,26 @@ exports.endGame = async (req, res) => {
         });
     }
 };
+exports.quitGame = async (req, res) => {
+
+    try {
+
+        req.io.emit('quitGame', {
+            deleteLocalData : true
+        });
+
+        res.status(200).send({
+            success: true,
+            message: 'Game has been successfully quitted',
+            data: {
+                deleteLocalData : true
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            success: false,
+            error: error.message,
+        });
+    }
+};
